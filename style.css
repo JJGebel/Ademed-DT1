@@ -1,0 +1,200 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Nunito', sans-serif;
+    background: #0D1117; 
+    overflow: hidden;
+    color: #E6EDF3; 
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Header */
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Header Left */
+.header-left {
+    display: flex;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.profile-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.profile-main {
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    padding: 0.5em 3em 0.5em 1em;
+    background: #1F2937;
+    border-radius: 0 32px 32px 0;
+}
+
+.profile-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #00E5FF; 
+    border: 3px solid white; 
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.profile-image::before {
+    content: '';
+    display: block;
+    width: 22px;
+    height: 22px;
+    background: #0D1117; 
+    border-radius: 50%;
+    position: absolute;
+    top: 13px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.profile-image::after {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 40px;
+    background: #0D1117;
+    border-radius: 50% 50% 0 0;
+}
+
+.profile-tag {
+    background: #1F2937;
+    border-radius: 0 32px 32px 0;
+    padding: 10px 28px;
+    margin-left: -14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-tag span {
+    color: #00E5FF;
+    font-family: 'Caveat', cursive;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+/* Header Right */
+.settings-main {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 1em 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Cog */
+.settings-icon-outer {
+    width: 5rem;
+    height: 5rem;
+    background: #1F2937;
+    transition: transform 0.4s ease, background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(81.4% 39.8%, 93.4% 43.1%, 93.4% 56.9%, 81.4% 60.2%, 79.4% 65.0%, 85.6% 75.9%, 75.9% 85.6%, 65.0% 79.4%, 60.2% 81.4%, 56.9% 93.4%, 43.1% 93.4%, 39.8% 81.4%, 35.0% 79.4%, 24.1% 85.6%, 14.4% 75.9%, 20.6% 65.0%, 18.6% 60.2%, 6.6% 56.9%, 6.6% 43.1%, 18.6% 39.8%, 20.6% 35.0%, 14.4% 24.1%, 24.1% 14.4%, 35.0% 20.6%, 39.8% 18.6%, 43.1% 6.6%, 56.9% 6.6%, 60.2% 18.6%, 65.0% 20.6%, 75.9% 14.4%, 85.6% 24.1%, 79.4% 35.0%);
+}
+
+.settings-icon-inner {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    border: 0.18rem solid #00E5FF;
+    background: #0D1117; 
+    z-index: 1;
+}
+
+.settings-main:hover .settings-icon-outer {
+    transform: rotate(45deg);
+    background: #00E5FF;
+    box-shadow: 0 0 20px #00E5FF;
+}
+
+
+.main-part {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column; 
+}
+
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.main {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    padding-top: 6em;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4rem;
+}
+
+/* Title */
+.content-title span {
+    font-family: 'Caveat', cursive;
+    font-size: 8rem;
+    font-weight: 600;
+    color: #E0F7FA;
+    letter-spacing: 0.05em;
+    display: block;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
