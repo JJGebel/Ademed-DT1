@@ -1,6 +1,6 @@
 <?php
 #CONFIG
-$keyFile = 'keyFile.txt'; //PASTE YOUR ACUAL KEY THERE
+$keyFile = 'keyFile.txt'; //PASTE YOUR ACUAL KEY IN THIS FILE
 $url = 'https://api.naga.ac/v1/chat/completions';
 
 if (is_readable($keyFile)) {
@@ -10,14 +10,13 @@ if (is_readable($keyFile)) {
 }
 
 #FUNCTIONS
-function callAI($apiKey, $url){
+function callAi($apiKey, $url, $model, $prompt){
     // 2. Prepare the payload (the -d flag in your curl command)
     $data = [
-        'model' => 'llama-3.2-1b-instruct',
+        'model' => $model,
         'messages' => [
-            ['role' => 'user', 'content' => "generate a short greeting. Be creative"]
+            ['role' => 'user', 'content' => $prompt]
         ],
-        'temperature' => 0.9
     ];
 
     // 3. Initialize cURL
@@ -48,5 +47,5 @@ function callAI($apiKey, $url){
 }
 
 #MAIN
-callAI($apiKey,$url);
+callAi($apiKey,$url, "llama-3.2-1b-instruct", "write a greeting message for ai-based to-do list. Just one. No other text.");
 ?>
