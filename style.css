@@ -7,17 +7,14 @@
 html, body {
     width: 100%;
     height: 100%;
-    font-family: 'Nunito', sans-serif;
+    font-family: "Verdana", "Courier New", monospace;
     background: #0D1117; 
     overflow: hidden;
     color: #E6EDF3; 
-}
-
-.app {
+    
     display: flex;
     flex-direction: column;
-    width: 100vw;
-    height: 100vh;
+    flex-wrap: nowrap;
 }
 
 /* Header */
@@ -104,7 +101,6 @@ html, body {
 
 .profile-tag span {
     color: #00E5FF;
-    font-family: 'Caveat', cursive;
     font-size: 2em;
     font-weight: 600;
 }
@@ -148,53 +144,46 @@ html, body {
     box-shadow: 0 0 20px #00E5FF;
 }
 
-
-.main-part {
-    height: 100vh;
-    width: 100%;
-    display: flex;
-    flex-direction: column; 
-}
-
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
-.main {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.content-wrapper {
-    display: flex;
-    align-items: flex-start;
-    padding-top: 6em;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
-
 .content {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 4rem;
+    align-items: center;
+    gap: 2em;
 }
 
-/* Title */
-.content-title span {
-    font-family: 'Caveat', cursive;
-    font-size: 8rem;
+.task {
+    background: #1F2937;
+    border-radius: 16px;
+    width: 80%;
+    max-width: 600px;
+
+    gap: 1rem;
+    padding: 1em;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+.create-task-content {
+    display: none;
+}
+
+.add-task-button-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 100%;
+    gap: 1em;
+}
+.add-task-button {
+    background: #008cff;
+    border: none;
+    border-radius: 8px;
+    min-height: 4rem;
+    width: 50%;
+    color: #0D1117;
     font-weight: 600;
-    color: #E0F7FA;
-    letter-spacing: 0.05em;
-    display: block;
-    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    font-size: 2em;
+    cursor: pointer;
 }
