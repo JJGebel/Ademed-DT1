@@ -1,1 +1,1 @@
-print("fetching from python scripts also works")
+print("fetching from python scripts  OK")
