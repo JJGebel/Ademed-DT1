@@ -1,16 +1,21 @@
 <?php
 #CONFIG
-$keyFile = 'keyFile.txt'; //PASTE YOUR ACUAL KEY IN THIS FILE
-$url = 'https://api.naga.ac/v1/chat/completions';
+define('KEY_FILE', 'keyFile.txt'); //PASTE YOUR ACUAL KEY IN THIS FILE
+define('URL','https://api.naga.ac/v1/chat/completions');
+define('DEFAULT_MODEL', 'llama-3.2-1b-instruct');
 
-if (is_readable($keyFile)) {
-    $apiKey = trim(file_get_contents($keyFile));
+if (is_readable(KEY_FILE)) {
+    define('API_KEY', trim(file_get_contents(KEY_FILE)));
 } else {
-    echo "No keyFile.txt found. Create the file and paste your naga.ac API key here";
+    echo "No " . KEY_FILE. " found. Create the file and paste your API key here";
 }
 
 #FUNCTIONS
-function callAi($apiKey, $url, $model, $prompt){
+function callAi($prompt, $apiKey = null, $url = null, $model = null){
+    $apiKey = $apiKey ?? API_KEY;
+    $url = $url ?? URL;
+    $model = $model ?? DEFAULT_MODEL;
+    
     // 2. Prepare the payload (the -d flag in your curl command)
     $data = [
         'model' => $model,
@@ -47,9 +52,47 @@ function callAi($apiKey, $url, $model, $prompt){
         curl_close($ch);
     }
 }
-
-#MAIN
-echo(callAi($apiKey,$url, "llama-3.2-1b-instruct", "write a greeting message for ai-based to-do list. Just one. No other text."));
-
-
+echo(callAi("cześć"));
 ?>
+
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chat.css">
+    <script type="module" src="main.js"></script>
+    <title>AdamedDT</title>
+</head>
+<body>    
+    <div class="header">
+        <div class="header-left">
+            <div class="profile-wrapper">
+                <div class="profile-main">
+                    <div class="profile-image"></div>
+                    <div class="profile-tag"><span>admin</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="settings-wrapper">
+                <button class="settings-main">
+                    <div class="settings-icon-outer">
+                        <div class="settings-icon-inner"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        
+    </div>
+    <div id="chat-interface">
+        <input type="text">
+        <button type="submit" name="sendToAi">Wyślij</button>
+
+    </div>
+</body>
+</html>
