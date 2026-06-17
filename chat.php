@@ -32,20 +32,24 @@ function callAi($apiKey, $url, $model, $prompt){
     ]);
 
     // 5. Execute and catch errors
-    $response = curl_exec($ch);
-
-    if (curl_errno($ch)) {
-        echo 'Error:' . curl_error($ch);
-    } else {
-        // 6. Decode and display the result
-        $result = json_decode($response, true);
-        echo $result['choices'][0]['message']['content'];
+    try{
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return 'Error:' . curl_error($ch);
+        } else {
+            // 6. Decode and display the result
+            $result = json_decode($response, true);
+            return $result['choices'][0]['message']['content'];
+        }
     }
-
     // 7. Close the connection
-    curl_close($ch);
+    finally{
+        curl_close($ch);
+    }
 }
 
 #MAIN
-callAi($apiKey,$url, "llama-3.2-1b-instruct", "write a greeting message for ai-based to-do list. Just one. No other text.");
+echo(callAi($apiKey,$url, "llama-3.2-1b-instruct", "write a greeting message for ai-based to-do list. Just one. No other text."));
+
+
 ?>
