@@ -1,13 +1,13 @@
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="chatmain.css">
     <title>AdamedDT</title>
     <script src="chat.js" defer></script>
 </head>
-<body>    
+<body>
     <div class="header">
         <div class="header-left">
             <div class="profile-wrapper">
@@ -30,12 +30,20 @@
     </div>
 
     <div class="content">
-        
-    </div>
-    <div id="chat">
-        <div id = "chat-box"></div>
-        <input type="text" id="prompt">
-        <button onclick="sendToAi()">Wyślij</button>
+        <div class="chat wrapper">
+            <div class="chat-container">
+                <div class="chat-view" id="chat-box">
+                </div>
+
+                <div class="chat-prompt">
+                    <input type="text" id="prompt" placeholder="Type your goal or type /end to get a summary..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-proceed">
+            <button class="end-chat-btn" onclick="sendToAi()">Koniec rozmowy</button>
+        </div>
     </div>
 </body>
 </html>

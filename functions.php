@@ -1,59 +1,111 @@
 <?php
 #CONFIG
-define('KEY_FILE', 'keyFile.txt'); //PASTE YOUR ACUAL KEY IN THIS FILE
-define('URL','https://api.naga.ac/v1/chat/completions');
-define('DEFAULT_MODEL', 'llama-3.2-1b-instruct');
+define('KEY_FILE', 'keyFile.txt'); //PASTE YOUR ACTUAL KEY IN THIS FILE
+define('URL', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
 
-$userPrompt = file_get_contents('php://input');
+// Fallback models in order of preference
+define('MODEL_FALLBACKS', ['gemini-2.5-flash-lite','gemini-2.5-flash']);
+
+// Get JSON input
+$input = json_decode(file_get_contents('php://input'), true);
 
 if (is_readable(KEY_FILE)) {
     define('API_KEY', trim(file_get_contents(KEY_FILE)));
 } else {
-    echo "No " . KEY_FILE. " found. Create the file and paste your API key here";
+    http_response_code(500);
+    echo json_encode(['error' => 'No ' . KEY_FILE . ' found. Create the file and paste your API key here']);
+    exit;
 }
 
 #FUNCTIONS
-function callAi($prompt, $apiKey = null, $url = null, $model = null){
+function callAi($history, $apiKey = null, $url = null, $model = null){
+    global $lastError;
+
     $apiKey = $apiKey ?? API_KEY;
-    $url = $url ?? URL;
-    $model = $model ?? DEFAULT_MODEL;
+    $url    = $url    ?? URL;
+    $modelsToTry = $model ? [$model] : MODEL_FALLBACKS;
 
-    // 2. Prepare the payload (the -d flag in your curl command)
-    $data = [
-        'model' => $model,
-        'messages' => [
-            ['role' => 'user', 'content' => $prompt]
-        ],
-    ];
+    foreach ($modelsToTry as $currentModel) {
+        $lastError = '';
 
-    // 3. Initialize cURL
-    $ch = curl_init($url);
+        // Prepare the payload with conversation history
+        $data = [
+            'model'    => $currentModel,
+            'messages' => $history,
+        ];
 
-    // 4. Set cURL options
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Returns the response as a string
-    curl_setopt($ch, CURLOPT_POST, true);           // Sets request method to POST
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Encodes data to JSON
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $apiKey,         // -H "Authorization: ..."
-        'Content-Type: application/json'             // -H "Content-Type: ..."
-    ]);
+        // Initialize cURL
+        $ch = curl_init($url);
 
-    // 5. Execute and catch errors
-    try{
-        $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            return 'Error:' . curl_error($ch);
-        } else {
-            // 6. Decode and display the result
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 second timeout
+
+        // Execute and handle errors
+        try {
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                $lastError = 'Curl error: ' . curl_error($ch);
+                curl_close($ch);
+                continue; // Try next model
+            }
+
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                $lastError = "HTTP $httpCode: " . $response;
+                continue; // Try next model
+            }
+
             $result = json_decode($response, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $lastError = 'JSON decode error: ' . json_last_error_msg();
+                continue; // Try next model
+            }
+
+            if (!isset($result['choices'][0]['message']['content'])) {
+                $lastError = 'Invalid response structure from API';
+                continue; // Try next model
+            }
+
             return $result['choices'][0]['message']['content'];
+
+        } catch (Exception $e) {
+            $lastError = 'Exception: ' . $e->getMessage();
+            if (isset($ch)) {
+                curl_close($ch);
+            }
+            continue; // Try next model
         }
     }
-    // 7. Close the connection
-    finally{
-        curl_close($ch);
-    }
-}
-echo(callAi($userPrompt))
-?>
 
+    // All models failed
+    return json_encode(['error' => 'All models failed', 'details' => $lastError]);
+}
+
+// Process the request
+if (isset($input['history']) && is_array($input['history'])) {
+    $response = callAi($input['history']);
+
+    // Check if response is an error
+    $decoded = json_decode($response, true);
+    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['error'])) {
+        http_response_code(500);
+        echo $response;
+    } else {
+        echo $response;
+    }
+} else {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid input: history array required']);
+}
+?>
