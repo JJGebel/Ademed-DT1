@@ -95,6 +95,14 @@ function callAi($history, $apiKey = null, $url = null, $model = null){
 
 // Process the request
 if (isset($input['history']) && is_array($input['history'])) {
+    // Get system prompt from input or use default
+    $systemPrompt = $input['systemPrompt'] ?? null;
+    
+    // If custom system prompt provided, prepend it to history
+    if ($systemPrompt !== null) {
+        array_unshift($input['history'], ['role' => 'system', 'content' => $systemPrompt]);
+    }
+    
     $response = callAi($input['history']);
 
     // Check if response is an error

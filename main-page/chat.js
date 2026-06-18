@@ -1,120 +1,303 @@
 const PROMPT_INPUT = document.querySelector('.chat-prompt input');
 const CHAT_BOX = document.querySelector('.chat-view');
 
-// Conversation history storage
-let conversationHistory = [
-    {
-        role: 'system',
-        content: 'Use conversational chat style up to 10 words. Follow this workflow: 1. Once they share their goal, acknowledge it with enthusiasm and ask about the first baby step needed 2. If the task is specyfic enough (less than 1/3 of the main goal), ask about the next step, if not, ask about subsequent steps to that step until they meet that criteria (less than 1/3, doable in 30 minutes). REMEMBER: DO NOT BREAK THE GOAL INTO STEPS FOR THE USER, UNLESS HE EXPLICITLY ASK YOU TO DO SO. IF HE ASK YOU TO PROPOSE THE NEXT STEP, YOU HAVE 40 WORDS LIMIT AND YOU SHOULD PROPOSE A COUPLE OF OPITIONS. DO NOT HIS KNOWLEDGE, DO NOT HELP HIM TO LEARN THIS SUBJECT, DO NOT ASK FOR DETAILS. THE ONLY THING YOU DO IS ASKING HIM ABOUT THE NEXT BABY-STEPS TOWARD HIS GOAL. DO NOT DIVE TOO DEEP, WHEN THE STEP IS ACHIEVABLE IN LESS THAN 1h, ASK ABOUT THE NEXT STEP TO THE MAIN GOAL. GOOD EXAMPLE: U:Linux terminal AI:Hello! Whats your goal with the Linux terminal? Whats the very first step? U:Navigating dirs for 30 min AI:Ok. So the first task would be: Practicing navigation duration:30 min. What would be the next step for learning the terminal or navigation?'
-    }
-];
+// =============================================================
+// STATE MANAGEMENT
+// =============================================================
+let currentPhase = 0; // 0: SMART, 1: Tasks, 2: Complete
+let smartGoal = null;
+let tasks = [];
+let phaseHistory = {
+    phase0: [], // SMART conversation
+    phase1: []  // Tasks conversation
+};
 
-function sendToAi() {
-    const userInput = PROMPT_INPUT.value.trim();
+// =============================================================
+// FAZA 0 - SMART
+// =============================================================
+function getSmartSystemPrompt() {
+    return `Pomagasz użytkownikowi sformułować cel wg metodologii SMART (Specific, Measurable, Achievable, Relevant, Time-bound).
+Zasady:
+1. Jeśli cel NIE spełnia wszystkich 5 kryteriów SMART - zadaj JEDNO pytanie o najważniejsze brakujące kryterium.
+2. Jeśli cel SPEŁNIA wszystkie 5 kryteriów SMART - odpowiedz DOKŁADNIE zaczynając od "SMART!" (z wykrzyknikiem), następnie krótko potwierdź cel.
+3. Odpowiadaj po polsku. Bądź zwięzły.`;
+}
+
+async function runSmartPhase() {
+    currentPhase = 0;
+    phaseHistory.phase0 = [];
     
-    if (!userInput) return;
+    // Clear chat and show phase header
+    CHAT_BOX.innerHTML = '<div class="bubble received"><strong>=== FAZA 1: Definiowanie celu SMART ===</strong></div>';
     
-    // Check for /end command
-    const isEnding = userInput.toLowerCase() === '/end';
+    // Wait for user input
+    PROMPT_INPUT.placeholder = 'Podaj swój cel...';
+}
+
+async function handleSmartPhase(userInput) {
+    // Build history for API call
+    const history = [
+        { role: 'system', content: getSmartSystemPrompt() },
+        ...phaseHistory.phase0,
+        { role: 'user', content: userInput }
+    ];
     
-    if (!isEnding) {
-        // Add user message to display
-        CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    const response = await callAi(history);
+    
+    // Add to history
+    phaseHistory.phase0.push({ role: 'user', content: userInput });
+    phaseHistory.phase0.push({ role: 'assistant', content: response });
+    
+    // Display messages
+    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    CHAT_BOX.innerHTML += '<div class="bubble received">' + response + '</div>';
+    
+    // Check if SMART goal confirmed
+    if (response.startsWith('SMART!')) {
+        smartGoal = response.replace(/^SMART!\s*/i, '').split('\n')[0].trim();
+        if (!smartGoal) smartGoal = userInput;
         
-        // Add user message to history
-        conversationHistory.push({
-            role: 'user',
-            content: userInput
-        });
+        CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Cel SMART zatwierdzony!</strong></div>';
+        
+        // Transition to Phase 1
+        await startTasksPhase();
     } else {
-        // Send a separate request for summary with dedicated system prompt
-        const summaryPrompt = 'Based on the following conversation, summarize the main goal and all baby steps mentioned. Categorize steps as knowledge-based (learning something new, understanding concepts, gathering information) or time-based (allocating time, scheduling work, setting deadlines).'
-
-        // Create summary history with conversation context (exclude original system prompt)
-        const summaryHistory = [
-            { role: 'system', content: summaryPrompt },
-            ...conversationHistory.slice(1)
-        ];
-
-        // Send summary request
-        fetch('functions.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                history: summaryHistory
-            })
-        })
-        .then(function(response) {
-            return response.text();
-        })
-        .then(function(data) {
-            console.log('Summary PHP responded:', data);
-            
-            // Try to parse as JSON for pretty display
-            try {
-                const summary = JSON.parse(data);
-                CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Summary:</strong></div>';
-                CHAT_BOX.innerHTML += '<div class="bubble received">Goal: ' + summary.goal + '</div>';
-                CHAT_BOX.innerHTML += '<div class="bubble received">Knowledge steps: ' + summary.knowledge_based_steps.join(', ') + '</div>';
-                CHAT_BOX.innerHTML += '<div class="bubble received">Time steps: ' + summary.time_based_steps.join(', ') + '</div>';
-            } catch (e) {
-                // Not valid JSON, show raw response
-                CHAT_BOX.innerHTML += '<div class="bubble received">Summary: ' + data + '</div>';
-            }
-            
-            CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
-        })
-        .catch(function(error) {
-            console.error('Communication error:', error);
-            CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb;">Communication error: ' + error + '</div>';
-        });
-        
-        PROMPT_INPUT.value = '';
-        return; // Don't continue with normal flow
+        // Continue SMART conversation
+        PROMPT_INPUT.placeholder = 'Odpowiedź na pytanie...';
     }
     
-    // Scroll to bottom
     CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+}
+
+// =============================================================
+// FAZA 1 - TASKS
+// =============================================================
+function getTasksSystemPrompt() {
+    return `Pomagasz planować małe kroki do celu SMART: "${smartGoal}".
+Zasady:
+1. Poproś użytkownika o opisanie kolejnego małego kroku/zadania. NIE sugeruj kroków samodzielnie, chyba że użytkownik wprost poprosi.
+2. Sprawdź, czy zadanie zawiera:
+   a) Tytuł
+   b) Termin wykonania
+   c) Dla zadań czasowych (których NIE można sprawdzić papierowym testem, np. gitara, bieganie, czytanie) - także długość wykonywania.
+3. Jeśli brakuje info - dopytuj.
+4. Gdy zadanie jest kompletne - odpowiedz zaczynając DOKŁADNIE od "ZADANIE_OK:" i powtórz tytuł.
+5. Odpowiadaj po polsku. Bądź zwięzly.`;
+}
+
+async function startTasksPhase() {
+    currentPhase = 1;
+    phaseHistory.phase1 = [];
     
-    // Send to server with full history
-    fetch('functions.php', {
+    CHAT_BOX.innerHTML += '<div class="bubble received"><strong>=== FAZA 2: Małe kroki do celu ===</strong></div>';
+    CHAT_BOX.innerHTML += '<div class="bubble received">(Wpisz /end aby zakończyć dodawanie zadań)</div>';
+    
+    // Start with AI asking about first task
+    await promptForNextTask();
+}
+
+async function promptForNextTask() {
+    const initMsg = tasks.length === 0
+        ? 'Zacznijmy. Zapytaj o pierwsze małe zadanie prowadzące do celu.'
+        : 'Zadanie zapisane. Zapytaj o kolejne zadanie lub poczekaj na /end.';
+    
+    const history = [
+        { role: 'system', content: getTasksSystemPrompt() },
+        { role: 'user', content: initMsg }
+    ];
+    
+    const response = await callAi(history);
+    CHAT_BOX.innerHTML += '<div class="bubble received">' + response + '</div>';
+    
+    phaseHistory.phase1.push({ role: 'user', content: initMsg });
+    phaseHistory.phase1.push({ role: 'assistant', content: response });
+    
+    PROMPT_INPUT.placeholder = 'Opisz zadanie lub wpisz /end...';
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+}
+
+async function handleTasksPhase(userInput) {
+    // Check for /end command
+    if (userInput.trim() === '/end') {
+        CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+        await generateFinalJson();
+        return;
+    }
+    
+    // Build history
+    const history = [
+        { role: 'system', content: getTasksSystemPrompt() },
+        ...phaseHistory.phase1,
+        { role: 'user', content: userInput }
+    ];
+    
+    const response = await callAi(history);
+    
+    // Add to history
+    phaseHistory.phase1.push({ role: 'user', content: userInput });
+    phaseHistory.phase1.push({ role: 'assistant', content: response });
+    
+    // Display messages
+    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    CHAT_BOX.innerHTML += '<div class="bubble received">' + response + '</div>';
+    
+    // Check if task is complete
+    if (response.startsWith('ZADANIE_OK:')) {
+        await extractTaskData(phaseHistory.phase1);
+        await promptForNextTask();
+    } else {
+        PROMPT_INPUT.placeholder = 'Dokończ opis zadania...';
+    }
+    
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+}
+
+async function extractTaskData(convHistory) {
+    const extractSys = `Wyciągnij dane zadania z rozmowy i zwróć TYLKO JSON (bez markdown):
+{"title":"...","deadline":"...","duration":"...lub null","details":"..."}`;
+    
+    const conv = convHistory.map(m => `${m.role === 'user' ? 'U' : 'AI'}: ${m.content}`).join('\n');
+    
+    const history = [
+        { role: 'system', content: extractSys },
+        { role: 'user', content: conv }
+    ];
+    
+    const extracted = await callAi(history);
+    
+    try {
+        const cleanJson = extracted.replace(/```json?/gi, '').replace(/```/g, '').trim();
+        const taskData = JSON.parse(cleanJson);
+        tasks.push(taskData);
+        CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #0d9488; color: white;">Zapisano: "' + taskData.title + '"</div>';
+    } catch (e) {
+        // Fallback if JSON parsing fails
+        const lastUserMsg = convHistory[convHistory.length - 2]?.content || 'Zadanie ' + (tasks.length + 1);
+        tasks.push({
+            title: 'Zadanie ' + (tasks.length + 1),
+            deadline: '',
+            duration: null,
+            details: lastUserMsg
+        });
+        CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #0d9488; color: white;">Zadanie zapisane.</div>';
+    }
+}
+
+// =============================================================
+// FAZA 2 - FINAL JSON
+// =============================================================
+async function generateFinalJson() {
+    currentPhase = 2;
+    
+    CHAT_BOX.innerHTML += '<div class="bubble received"><strong>=== FAZA 3: Generowanie JSON ===</strong></div>';
+    
+    const sys = `Generujesz JSON planu działania. Odpowiedz TYLKO JSONem bez markdown.
+Schema:
+{
+  "smartGoal": "string",
+  "tasks": [
+    {
+      "type": "zad lub rep",
+      "title": "string",
+      "details": "string",
+      "deadline": "string",
+      "duration": "string lub null",
+      "milestones": ["...", "..."]
+    }
+  ]
+}
+type="rep": powtarzalne czasowe (gitara, bieganie, czytanie) - ma duration, BRAK milestones.
+type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).`;
+    
+    const prompt = `Cel SMART: ${smartGoal}\n\nZadania:\n${JSON.stringify(tasks, null, 2)}\n\nWygeneruj JSON.`;
+    
+    const history = [
+        { role: 'system', content: sys },
+        { role: 'user', content: prompt }
+    ];
+    
+    const result = await callAi(history);
+    
+    try {
+        const cleanJson = result.replace(/```json?/gi, '').replace(/```/g, '').trim();
+        const finalPlan = JSON.parse(cleanJson);
+        
+        CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Plan gotowy!</strong></div>';
+        CHAT_BOX.innerHTML += '<div class="bubble received" style="font-family: monospace; white-space: pre-wrap; background: #1A1F29;">' + JSON.stringify(finalPlan, null, 2) + '</div>';
+        
+        // Download as JSON file
+        downloadJson(finalPlan);
+        
+        PROMPT_INPUT.placeholder = 'Plan zakończony! Odśwież stronę, aby zacząć od nowa.';
+        PROMPT_INPUT.disabled = true;
+        
+    } catch (e) {
+        CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24;">Błąd generowania JSON: ' + e.message + '</div>';
+    }
+    
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+}
+
+function downloadJson(data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plan.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// =============================================================
+// AI CALL HELPER
+// =============================================================
+async function callAi(history) {
+    const response = await fetch('functions.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            history: conversationHistory,
-            isEnding: isEnding
+            history: history
         })
-    })
-    .then(function(response) {
-        return response.text();
-    })
-    .then(function(data) {
-        console.log('PHP responded:', data);
-        
-        // Add AI response to display
-        CHAT_BOX.innerHTML += '<div class="bubble received">' + data + '</div>';
-        
-        // Add AI response to history (unless it's just an end command)
-        if (data.trim()) {
-            conversationHistory.push({
-                role: 'assistant',
-                content: data
-            });
-        }
-        
-        // Scroll to bottom
-        CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
-    })
-    .catch(function(error) {
-        console.error('Communication error:', error);
-        CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb;">Communication error: ' + error + '</div>';
     });
     
+    const data = await response.text();
+    
+    // Check for error
+    try {
+        const decoded = JSON.parse(data);
+        if (decoded.error) {
+            throw new Error(decoded.error);
+        }
+    } catch (e) {
+        // Not JSON or parse error, return as-is
+    }
+    
+    return data;
+}
+
+// =============================================================
+// MAIN INPUT HANDLER
+// =============================================================
+async function sendToAi() {
+    const userInput = PROMPT_INPUT.value.trim();
+    
+    if (!userInput) return;
+    if (currentPhase === 2) return; // Phase complete
+    
     PROMPT_INPUT.value = '';
+    
+    switch (currentPhase) {
+        case 0:
+            await handleSmartPhase(userInput);
+            break;
+        case 1:
+            await handleTasksPhase(userInput);
+            break;
+    }
 }
 
 // Handle Enter key
@@ -122,4 +305,9 @@ PROMPT_INPUT.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         sendToAi();
     }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    runSmartPhase();
 });
