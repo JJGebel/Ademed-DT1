@@ -4,56 +4,59 @@ define('KEY_FILE', 'keyFile.txt'); //PASTE YOUR ACUAL KEY IN THIS FILE
 define('URL','https://api.naga.ac/v1/chat/completions');
 define('DEFAULT_MODEL', 'llama-3.2-1b-instruct');
 
-$userPrompt = file_get_contents('php://input');
+// Get JSON input
+$input = json_decode(file_get_contents('php://input'), true);
 
 if (is_readable(KEY_FILE)) {
     define('API_KEY', trim(file_get_contents(KEY_FILE)));
 } else {
-    echo "No " . KEY_FILE. " found. Create the file and paste your API key here";
+    echo json_encode(['error' => 'No ' . KEY_FILE . ' found. Create the file and paste your API key here']);
+    exit;
 }
 
 #FUNCTIONS
-function callAi($prompt, $apiKey = null, $url = null, $model = null){
+function callAi($history, $apiKey = null, $url = null, $model = null){
     $apiKey = $apiKey ?? API_KEY;
     $url = $url ?? URL;
     $model = $model ?? DEFAULT_MODEL;
 
-    // 2. Prepare the payload (the -d flag in your curl command)
+    // Prepare the payload with conversation history
     $data = [
         'model' => $model,
-        'messages' => [
-            ['role' => 'user', 'content' => $prompt]
-        ],
+        'messages' => $history,
     ];
 
-    // 3. Initialize cURL
+    // Initialize cURL
     $ch = curl_init($url);
 
-    // 4. Set cURL options
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Returns the response as a string
-    curl_setopt($ch, CURLOPT_POST, true);           // Sets request method to POST
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Encodes data to JSON
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $apiKey,         // -H "Authorization: ..."
-        'Content-Type: application/json'             // -H "Content-Type: ..."
+        'Authorization: Bearer ' . $apiKey,
+        'Content-Type: application/json'
     ]);
 
-    // 5. Execute and catch errors
+    // Execute and catch errors
     try{
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
             return 'Error:' . curl_error($ch);
         } else {
-            // 6. Decode and display the result
             $result = json_decode($response, true);
             return $result['choices'][0]['message']['content'];
         }
     }
-    // 7. Close the connection
     finally{
         curl_close($ch);
     }
 }
-echo(callAi($userPrompt))
-?>
 
+// Process the request
+if (isset($input['history']) && is_array($input['history'])) {
+    echo callAi($input['history']);
+} else {
+    echo json_encode(['error' => 'Invalid input: history array required']);
+}
+?>
