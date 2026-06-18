@@ -1,5 +1,5 @@
-const PROMPT_INPUT = document.getElementById('prompt')
-const CHAT_BOX = document.getElementById('chat-box')
+const PROMPT_INPUT = document.querySelector('.chat-prompt input');
+const CHAT_BOX = document.querySelector('.chat-view');
 
 // Conversation history storage
 let conversationHistory = [
@@ -12,12 +12,14 @@ let conversationHistory = [
 function sendToAi() {
     const userInput = PROMPT_INPUT.value.trim();
     
+    if (!userInput) return;
+    
     // Check for /end command
     const isEnding = userInput.toLowerCase() === '/end';
     
     if (!isEnding) {
         // Add user message to display
-        CHAT_BOX.innerHTML += '<p class="user-message">' + userInput + '</p>';
+        CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
         
         // Add user message to history
         conversationHistory.push({
@@ -53,22 +55,23 @@ function sendToAi() {
             // Try to parse as JSON for pretty display
             try {
                 const summary = JSON.parse(data);
-                CHAT_BOX.innerHTML += '<p class="ai-message"><strong>Summary:</strong></p>';
-                CHAT_BOX.innerHTML += '<p class="ai-message">Goal: ' + summary.goal + '</p>';
-                CHAT_BOX.innerHTML += '<p class="ai-message">Knowledge steps: ' + summary.knowledge_based_steps.join(', ') + '</p>';
-                CHAT_BOX.innerHTML += '<p class="ai-message">Time steps: ' + summary.time_based_steps.join(', ') + '</p>';
+                CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Summary:</strong></div>';
+                CHAT_BOX.innerHTML += '<div class="bubble received">Goal: ' + summary.goal + '</div>';
+                CHAT_BOX.innerHTML += '<div class="bubble received">Knowledge steps: ' + summary.knowledge_based_steps.join(', ') + '</div>';
+                CHAT_BOX.innerHTML += '<div class="bubble received">Time steps: ' + summary.time_based_steps.join(', ') + '</div>';
             } catch (e) {
                 // Not valid JSON, show raw response
-                CHAT_BOX.innerHTML += '<p class="ai-message">Summary: ' + data + '</p>';
+                CHAT_BOX.innerHTML += '<div class="bubble received">Summary: ' + data + '</div>';
             }
             
             CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
         })
         .catch(function(error) {
             console.error('Communication error:', error);
-            CHAT_BOX.innerHTML += '<p class="error-message">Communication error: ' + error + '</p>';
+            CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb;">Communication error: ' + error + '</div>';
         });
         
+        PROMPT_INPUT.value = '';
         return; // Don't continue with normal flow
     }
     
@@ -93,7 +96,7 @@ function sendToAi() {
         console.log('PHP responded:', data);
         
         // Add AI response to display
-        CHAT_BOX.innerHTML += '<p class="ai-message">' + data + '</p>';
+        CHAT_BOX.innerHTML += '<div class="bubble received">' + data + '</div>';
         
         // Add AI response to history (unless it's just an end command)
         if (data.trim()) {
@@ -108,7 +111,7 @@ function sendToAi() {
     })
     .catch(function(error) {
         console.error('Communication error:', error);
-        CHAT_BOX.innerHTML += '<p class="error-message">Communication error: ' + error + '</p>';
+        CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24; border-color: #f5c6cb;">Communication error: ' + error + '</div>';
     });
     
     PROMPT_INPUT.value = '';
