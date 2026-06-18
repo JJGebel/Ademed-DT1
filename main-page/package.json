@@ -1,0 +1,13 @@
+{
+  "name": "smart-goal-planner",
+  "version": "1.0.0",
+  "description": "Interactive SMART goal planner powered by Gemini AI",
+  "type": "module",
+  "main": "smart-planner.js",
+  "scripts": {
+    "start": "node smart-planner.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
