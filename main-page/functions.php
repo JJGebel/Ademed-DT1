@@ -49,16 +49,17 @@ function callAi($history, $apiKey = null, $url = null, $model = null){
 
         // Execute and handle errors
         try {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //Dodane do działania
             $response = curl_exec($ch);
 
             if (curl_errno($ch)) {
                 $lastError = 'Curl error: ' . curl_error($ch);
-                curl_close($ch);
+                //curl_close($ch); //Dodane do działania
                 continue; // Try next model
             }
 
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            //Dodane do działania curl_close($ch);
 
             if ($httpCode !== 200) {
                 $lastError = "HTTP $httpCode: " . $response;
