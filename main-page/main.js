@@ -20,22 +20,22 @@ function renderTask(task, idx) {
 			
 		</div>
 		<div class="task-content">
-			<p>${task.details}</p>
+			`/*<p>${task.details}</p>*/+`
 			<br>
 			<div class="milestones">
-				<h3>Kamienie milowe:</h3>
-				<ul>`;
+				<h3><i>Kamienie milowe:</i></h3>
+				<ul style="list-style: none;">`;
 					for (let i = 0; i < task.milestones.length; i++) {
 						const milestone = task.milestones[i];
 						const isCompleted = i <= task.progress;
 
 						if (isCompleted) {
-							innerHTML += `<li class="completed-milestone">${milestone} ✅</li>`;
+							innerHTML += `<li class="completed-milestone"><p><span style="font-style: normal;">◼</span> ${milestone} </p></li>`;
 						} else {
 							if (i === task.progress + 1) {
-								innerHTML += `<li class="ongoing-milestone">${milestone} (bieżący)</li>`;
+								innerHTML += `<li class="ongoing-milestone"><div style="display: flex; align-items: center; gap: 10px;"><p>➜ ${milestone} (bieżący)</p><button class="ongoing-button">Sprawdź się</button></div></li>`;
 							} else {
-								innerHTML += `<li>${milestone}</li>`;
+								innerHTML += `<li class="upcoming-milestone"><p><span style="font-style: normal;">◻</span> ${milestone}</p></li>`;
 							}
 						}
 						
@@ -76,3 +76,10 @@ repButton.addEventListener('click', () => {
 
 //clearTasks();
 renderTasks();
+
+const ongoingButton = document.querySelector('.ongoing-button');
+ongoingButton.addEventListener('click', () => {
+	const taskid = 0; // TODO: pobrać id taska
+	const milestoneId = getTasks()[taskid].progress;
+	window.location.href = 'sprawdzanie.php?task_id=' + taskid + '&milestone_id=' + milestoneId;
+});
