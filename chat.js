@@ -1,32 +1,122 @@
 const PROMPT_INPUT = document.getElementById('prompt')
 const CHAT_BOX = document.getElementById('chat-box')
-function sendToAi() {
-    CHAT_BOX.innerHTML += "<p>" + PROMPT_INPUT.value + "</p>";
-    // 1. Pobieramy tekst wpisany przez użytkownika do pola input
-    var userInput = PROMPT_INPUT.value;
 
-    // 2. Wysyłamy żądanie do serwera (do pliku functions.php)
-    fetch('functions.php', {
-        method: 'POST',           // Używamy metody POST, bo przesyłamy dane do serwera
-        body: userInput           // W ciele wysyłamy tylko tekst z inputa
-    })
+// Conversation history storage
+let conversationHistory = [
+    {
+        role: 'system',
+        content: 'Use conversational chat style up to 10 words. Follow this workflow: 1. Once they share their goal, acknowledge it with enthusiasm and ask about the first baby step needed 2. If the task is specyfic enough (less than 1/3 of the main goal), ask about the next step, if not, ask about subsequent steps to that step until they meet that criteria (less than 1/3, doable in 30 minutes). REMEMBER: DO NOT BREAK THE GOAL INTO STEPS FOR THE USER, UNLESS HE EXPLICITLY ASK YOU TO DO SO. IF HE ASK YOU TO PROPOSE THE NEXT STEP, YOU HAVE 40 WORDS LIMIT AND YOU SHOULD PROPOSE A COUPLE OF OPITIONS. DO NOT HIS KNOWLEDGE, DO NOT HELP HIM TO LEARN THIS SUBJECT, DO NOT ASK FOR DETAILS. THE ONLY THING YOU DO IS ASKING HIM ABOUT THE NEXT BABY-STEPS TOWARD HIS GOAL. DO NOT DIVE TOO DEEP, WHEN THE STEP IS ACHIEVABLE IN LESS THAN 1h, ASK ABOUT THE NEXT STEP TO THE MAIN GOAL. GOOD EXAMPLE: U:Linux terminal AI:Hello! Whats your goal with the Linux terminal? Whats the very first step? U:Navigating dirs for 30 min AI:Ok. So the first task would be: Practicing navigation duration:30 min. What would be the next step for learning the terminal or navigation?'
+    }
+];
+
+function sendToAi() {
+    const userInput = PROMPT_INPUT.value.trim();
     
-    // 3. Czekamy na odpowiedź z serwera i zamieniamy ją na zwykły tekst
+    // Check for /end command
+    const isEnding = userInput.toLowerCase() === '/end';
+    
+    if (!isEnding) {
+        // Add user message to display
+        CHAT_BOX.innerHTML += '<p class="user-message">' + userInput + '</p>';
+        
+        // Add user message to history
+        conversationHistory.push({
+            role: 'user',
+            content: userInput
+        });
+    } else {
+        // Send a separate request for summary with dedicated system prompt
+        const summaryPrompt = 'Based on the following conversation, summarize the main goal and all baby steps mentioned. Categorize steps as knowledge-based (learning something new, understanding concepts, gathering information) or time-based (allocating time, scheduling work, setting deadlines).'
+
+        // Create summary history with conversation context (exclude original system prompt)
+        const summaryHistory = [
+            { role: 'system', content: summaryPrompt },
+            ...conversationHistory.slice(1)
+        ];
+
+        // Send summary request
+        fetch('functions.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                history: summaryHistory
+            })
+        })
+        .then(function(response) {
+            return response.text();
+        })
+        .then(function(data) {
+            console.log('Summary PHP responded:', data);
+            
+            // Try to parse as JSON for pretty display
+            try {
+                const summary = JSON.parse(data);
+                CHAT_BOX.innerHTML += '<p class="ai-message"><strong>Summary:</strong></p>';
+                CHAT_BOX.innerHTML += '<p class="ai-message">Goal: ' + summary.goal + '</p>';
+                CHAT_BOX.innerHTML += '<p class="ai-message">Knowledge steps: ' + summary.knowledge_based_steps.join(', ') + '</p>';
+                CHAT_BOX.innerHTML += '<p class="ai-message">Time steps: ' + summary.time_based_steps.join(', ') + '</p>';
+            } catch (e) {
+                // Not valid JSON, show raw response
+                CHAT_BOX.innerHTML += '<p class="ai-message">Summary: ' + data + '</p>';
+            }
+            
+            CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+        })
+        .catch(function(error) {
+            console.error('Communication error:', error);
+            CHAT_BOX.innerHTML += '<p class="error-message">Communication error: ' + error + '</p>';
+        });
+        
+        return; // Don't continue with normal flow
+    }
+    
+    // Scroll to bottom
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+    
+    // Send to server with full history
+    fetch('functions.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            history: conversationHistory,
+            isEnding: isEnding
+        })
+    })
     .then(function(response) {
         return response.text();
     })
-    
-    // 4. Gdy tekst jest gotowy, wypisujemy go w konsoli
     .then(function(data) {
-        console.log("PHP odpowiedziało: " + data);
+        console.log('PHP responded:', data);
         
-        // Opcjonalnie: wyświetlamy odpowiedź na stronie
-        CHAT_BOX.innerHTML += "<p>" + data + "</p>";
+        // Add AI response to display
+        CHAT_BOX.innerHTML += '<p class="ai-message">' + data + '</p>';
+        
+        // Add AI response to history (unless it's just an end command)
+        if (data.trim()) {
+            conversationHistory.push({
+                role: 'assistant',
+                content: data
+            });
+        }
+        
+        // Scroll to bottom
+        CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
     })
-    
-    // 5. Obsługa błędów (jeśli serwer nie odpowie lub wystąpi problem)
     .catch(function(error) {
-        console.error("Wystąpił błąd podczas komunikacji: " + error);
+        console.error('Communication error:', error);
+        CHAT_BOX.innerHTML += '<p class="error-message">Communication error: ' + error + '</p>';
     });
-    PROMPT_INPUT.value = ""
+    
+    PROMPT_INPUT.value = '';
 }
+
+// Handle Enter key
+PROMPT_INPUT.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendToAi();
+    }
+});

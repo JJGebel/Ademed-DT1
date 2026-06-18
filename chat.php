@@ -1,10 +1,11 @@
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="chat.css">
-    <title>AdamedDT</title>
+    <title>AdamedDT - Goal Breakdown Assistant</title>
     <script src="chat.js" defer></script>
 </head>
 <body>    
@@ -30,12 +31,16 @@
     </div>
 
     <div class="content">
-        
+        <h1>Goal Breakdown Assistant</h1>
+        <p>Share your goal and I'll help you break it down into manageable steps!</p>
     </div>
+    
     <div id="chat">
-        <div id = "chat-box"></div>
-        <input type="text" id="prompt">
-        <button onclick="sendToAi()">Wyślij</button>
+        <div id="chat-box"></div>
+        <div id="input-area">
+            <input type="text" id="prompt" placeholder="Type your goal or type /end to get a summary...">
+            <button onclick="sendToAi()">Wyślij</button>
+        </div>
     </div>
 </body>
 </html>
