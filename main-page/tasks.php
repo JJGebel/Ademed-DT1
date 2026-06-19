@@ -17,7 +17,7 @@
     <div class="header-left">
       <div class="profile-wrapper">
         <div class="profile-main">
-          <div class="profile-image"></div>
+          <div class="profile-image" onclick="window.location.href='index.php'" style="cursor: pointer;"></div>
           <div class="profile-tag"><span>admin</span></div>
         </div>
       </div>

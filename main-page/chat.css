@@ -195,19 +195,19 @@ html, body {
 }
 
 .bubble.sent {
-    align-self: flex-start;
-    background: #1A1F29; 
-    border: 1px solid #00E5FF; 
-    color: #E6EDF3;
-    border-bottom-left-radius: 4px; 
+    align-self: flex-end;
+    background: #00E5FF;
+    color: #0D1117;
+    font-weight: bold;
+    border-bottom-right-radius: 4px;
 }
 
 .bubble.received {
-    align-self: flex-end;
-    background: #00E5FF; 
-    color: #0D1117; 
-    font-weight: bold;
-    border-bottom-right-radius: 4px;
+    align-self: flex-start;
+    background: #1A1F29;
+    border: 1px solid #00E5FF;
+    color: #E6EDF3;
+    border-bottom-left-radius: 4px;
 }
 
 .chat-prompt {

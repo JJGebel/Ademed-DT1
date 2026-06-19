@@ -35,6 +35,10 @@ async function runSmartPhase() {
 }
 
 async function handleSmartPhase(userInput) {
+    // Display user message immediately
+    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+
     // Build history for API call
     const history = [
         { role: 'system', content: getSmartSystemPrompt() },
@@ -48,8 +52,7 @@ async function handleSmartPhase(userInput) {
     phaseHistory.phase0.push({ role: 'user', content: userInput });
     phaseHistory.phase0.push({ role: 'assistant', content: response });
     
-    // Display messages
-    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    // Display AI response
     CHAT_BOX.innerHTML += '<div class="bubble received">' + response + '</div>';
     
     // Check if SMART goal confirmed
@@ -117,9 +120,12 @@ async function promptForNextTask() {
 }
 
 async function handleTasksPhase(userInput) {
+    // Display user message immediately
+    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+
     // Check for /end command
     if (userInput.trim() === '/end') {
-        CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
         await generateFinalJson();
         return;
     }
@@ -137,8 +143,7 @@ async function handleTasksPhase(userInput) {
     phaseHistory.phase1.push({ role: 'user', content: userInput });
     phaseHistory.phase1.push({ role: 'assistant', content: response });
     
-    // Display messages
-    CHAT_BOX.innerHTML += '<div class="bubble sent">' + userInput + '</div>';
+    // Display AI response
     CHAT_BOX.innerHTML += '<div class="bubble received">' + response + '</div>';
     
     // Check if task is complete
