@@ -74,18 +74,28 @@ export function setTask(index, newtask) {
 	saveTasks(tasks);
 }
 
-export function addTask(type, title, details, milestones) {
+// Zapisz całą tablicę zadań naraz (używane przy importie z LLM)
+export function saveTasksArray(tasksArray) {
+    localStorage.setItem(storageKey, JSON.stringify(tasksArray));
+}
+
+export function addTask(type, title, details, milestones, duration = null) {
     if (type === null)  return;
 
 	const tasks = getTasks();
 
-	tasks.push({
+	const newTask = {
 		type,
 		title,
-		details,//: `Task o typie: ${isZadTask ? 'skończalne zadanie' : 'powtarzalne zadanie'}`,
-        milestones,
+		details,
+        milestones: type === 'zad' ? milestones : null,
         progress: -1
-	});
+	};
 
+	if (type === 'rep' && duration) {
+        newTask.duration = duration;
+    }
+
+	tasks.push(newTask);
 	saveTasks(tasks);
 }

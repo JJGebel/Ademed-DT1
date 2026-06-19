@@ -73,7 +73,6 @@ repButton.addEventListener('click', () => {
 	selectedType = 'rep';
 });
 
-//clearTasks();
 renderTasks();
 
 const ongoingButton = document.querySelectorAll('.ongoing-button');

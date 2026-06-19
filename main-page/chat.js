@@ -193,9 +193,9 @@ async function extractTaskData(convHistory) {
 // =============================================================
 async function generateFinalJson() {
     currentPhase = 2;
-    
+
     CHAT_BOX.innerHTML += '<div class="bubble received"><strong>=== FAZA 3: Generowanie JSON ===</strong></div>';
-    
+
     const sys = `Generujesz JSON planu działania. Odpowiedz TYLKO JSONem bez markdown.
 Schema:
 {
@@ -205,15 +205,16 @@ Schema:
       "type": "zad lub rep",
       "title": "string",
       "details": "string",
-      "deadline": "string",
-      "duration": "string lub null",
-      "milestones": ["...", "..."]
+      "milestones": ["...", "..."] lub null,
+      "progress": -1,
+      "duration": "string lub null"
     }
   ]
 }
 type="rep": powtarzalne czasowe (gitara, bieganie, czytanie) - ma duration, BRAK milestones.
-type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).`;
-    
+type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).
+progress zawsze = -1 dla nowych zadań.`;
+
     const prompt = `Cel SMART: ${smartGoal}\n\nZadania:\n${JSON.stringify(tasks, null, 2)}\n\nWygeneruj JSON.`;
     
     const history = [
@@ -229,11 +230,11 @@ type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).`;
         
         CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Plan gotowy!</strong></div>';
         CHAT_BOX.innerHTML += '<div class="bubble received" style="font-family: monospace; white-space: pre-wrap; background: #1A1F29;">' + JSON.stringify(finalPlan, null, 2) + '</div>';
-        
-        // Zapisz do localStorage
+
+        // Zapisz do localStorage zgodnie z taskUtilities.js
         localStorage.setItem('smartGoal', finalPlan.smartGoal);
-        localStorage.setItem('tasks', JSON.stringify(finalPlan.tasks));
-        
+        localStorage.setItem('adamed-tasks', JSON.stringify(finalPlan.tasks));
+
         console.log(`Załadowano cel: ${finalPlan.smartGoal}`);
         console.log(`Zapisano ${finalPlan.tasks.length} zadań do localStorage.`);
         
@@ -277,9 +278,9 @@ async function callAi(history) {
             history: history
         })
     });
-    
+
     const data = await response.text();
-    
+
     // Check for error
     try {
         const decoded = JSON.parse(data);
@@ -289,8 +290,60 @@ async function callAi(history) {
     } catch (e) {
         // Not JSON or parse error, return as-is
     }
-    
+
     return data;
+}
+
+// =============================================================
+// TASK UTILITIES COMPATIBILITY
+// =============================================================
+// Te funkcje są zgodne z taskUtilities.js dla dodatkowej kompatybilności
+const storageKey = 'adamed-tasks';
+
+function getTasks() {
+    const storedTasks = localStorage.getItem(storageKey);
+    if (!storedTasks) return [];
+    try {
+        const parsedTasks = JSON.parse(storedTasks);
+        return Array.isArray(parsedTasks) ? parsedTasks : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveTasksLocal(tasks) {
+    localStorage.setItem(storageKey, JSON.stringify(tasks));
+}
+
+function deleteTask(index) {
+    const tasks = getTasks();
+    tasks.splice(index, 1);
+    saveTasksLocal(tasks);
+}
+
+function setTask(index, newtask) {
+    const tasks = getTasks();
+    tasks[index] = newtask;
+    saveTasksLocal(tasks);
+}
+
+function addTask(type, title, details, milestones, duration = null) {
+    if (!type) return;
+    const tasks = getTasks();
+    const newTask = {
+        type,
+        title,
+        details,
+        progress: -1
+    };
+    if (type === 'zad' && milestones) {
+        newTask.milestones = milestones;
+    }
+    if (type === 'rep' && duration) {
+        newTask.duration = duration;
+    }
+    tasks.push(newTask);
+    saveTasksLocal(tasks);
 }
 
 // =============================================================

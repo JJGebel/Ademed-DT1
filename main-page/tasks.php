@@ -50,9 +50,6 @@
   <label style="display: block; margin-bottom: 0.5em; color: #9ca3af;">Opis:<br>
     <textarea id="edit-details" rows="3" cols="40" style="width: 100%; padding: 0.5em; background: #0D1117; border: 1px solid #2d3748; color: #E6EDF3; border-radius: 4px; margin-top: 0.25em;"></textarea>
   </label><br><br>
-  <label style="display: block; margin-bottom: 0.5em; color: #9ca3af;">Termin:<br>
-    <input id="edit-deadline" type="text" style="width: 100%; padding: 0.5em; background: #0D1117; border: 1px solid #2d3748; color: #E6EDF3; border-radius: 4px; margin-top: 0.25em;">
-  </label><br><br>
   <label style="display: block; margin-bottom: 0.5em; color: #9ca3af;">Czas wykonania (dla REP):<br>
     <input id="edit-duration" type="text" placeholder="np. 30 minut" style="width: 100%; padding: 0.5em; background: #0D1117; border: 1px solid #2d3748; color: #E6EDF3; border-radius: 4px; margin-top: 0.25em;">
   </label><br><br>
@@ -63,8 +60,10 @@
 <script>
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const storageKey = 'adamed-tasks';
+
 function saveTasks(tasks) {
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+  localStorage.setItem(storageKey, JSON.stringify(tasks));
 }
 
 // Parsuje string czasu np. "30 minut", "1 godzina 20 minut", "45 sekund" → sekundy
@@ -91,7 +90,7 @@ function formatTime(sec) {
 
 function renderTasks() {
   const goal = localStorage.getItem('smartGoal');
-  const raw  = localStorage.getItem('tasks');
+  const raw  = localStorage.getItem(storageKey);
   const container = document.getElementById('tasks-container');
   container.innerHTML = '';
 
@@ -102,7 +101,7 @@ function renderTasks() {
   }
 
   const tasks = JSON.parse(raw);
-  document.getElementById('goal-title').textContent = 'Cel: ' + goal;
+  document.getElementById('goal-title').textContent = goal ? 'Cel: ' + goal : 'Moje zadania';
 
   tasks.forEach((task, i) => {
     const section = document.createElement('section');
@@ -133,9 +132,9 @@ function renderTasks() {
         ${task.title}${done}
       </h2>
       <p style="color: #9ca3af; margin-bottom: 0.5em;"><strong>Opis:</strong> ${task.details}</p>
-      <p style="color: #9ca3af; margin-bottom: 0.5em;"><strong>Termin:</strong> ${task.deadline}</p>
       ${durationHTML}
       ${milestonesHTML}
+      ${task.progress !== undefined && task.progress >= 0 ? `<p style="color: #57aeff; margin-bottom: 0.5em;"><strong>Postęp:</strong> ${task.progress + 1} z ${task.milestones?.length || 0}</p>` : ''}
       <div style="margin-top:1em;">
         ${actionBtn}
         <button class="btn-edit" data-index="${i}" style="background: #57aeff; border: none; border-radius: 8px; color: #0D1117; padding: 0.5em 1em; font-weight: 600; cursor: pointer; transition: background 0.2s ease-out; margin-left: 0.5em;">✏️ Edytuj</button>
@@ -212,7 +211,6 @@ function attachHandlers(tasks) {
   const modal     = document.getElementById('edit-modal');
   const inpTitle    = document.getElementById('edit-title');
   const inpDetails  = document.getElementById('edit-details');
-  const inpDeadline = document.getElementById('edit-deadline');
   const inpDuration = document.getElementById('edit-duration');
   let editIndex = null;
 
@@ -222,7 +220,6 @@ function attachHandlers(tasks) {
       const t = tasks[editIndex];
       inpTitle.value    = t.title;
       inpDetails.value  = t.details;
-      inpDeadline.value = t.deadline;
       inpDuration.value = t.duration || '';
       modal.showModal();
     });
@@ -232,7 +229,6 @@ function attachHandlers(tasks) {
     if (editIndex === null) return;
     tasks[editIndex].title    = inpTitle.value.trim();
     tasks[editIndex].details  = inpDetails.value.trim();
-    tasks[editIndex].deadline = inpDeadline.value.trim();
     tasks[editIndex].duration = inpDuration.value.trim() || null;
     saveTasks(tasks);
     modal.close();
