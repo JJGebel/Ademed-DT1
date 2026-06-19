@@ -243,7 +243,7 @@ progress zawsze = -1 dla nowych zadań.`;
         
         // Przekieruj do tasks.php po krótkim opóźnieniu
         setTimeout(() => {
-            window.location.href = 'tasks.php';
+            window.location.href = 'index.php';
         }, 2000);
         
     } catch (e) {
