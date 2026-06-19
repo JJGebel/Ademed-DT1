@@ -1,5 +1,5 @@
 // KLUCZOWA POPRAWKA: Przeglądarka wymaga końcówki .js w ścieżce
-import { getTasks, saveTasks } from '../taskUtilities.js';
+import { getTask, setTask } from '../taskUtilities.js';
 
 // Pobranie elementów z HTML
 const contentDiv = document.querySelector('.content');
@@ -22,8 +22,8 @@ let currentTaskTitle = ""; // Zachowane tylko w tle dla sztucznej inteligencji
 
 // --- INICJALIZACJA DANYCH ---
 if (!isNaN(taskId) && !isNaN(milestoneId)) {
-    const tasks = getTasks();
-    const task = tasks[taskId];
+    // UŻYWAMY getTask() zamiast pobierania całej tablicy
+    const task = getTask(taskId); 
 
     if (task && task.milestones && task.milestones[milestoneId]) {
         currentMilestoneText = task.milestones[milestoneId];
@@ -93,11 +93,20 @@ if (inputArea && submitBtn && currentMilestoneText !== "") {
                     submitBtn.style.backgroundColor = "#00E5FF";
                     submitBtn.style.color = "#0D1117";
                     
-                    // Zapisywanie progresu
-                    const tasks = getTasks();
-                    if (tasks[taskId].progress < milestoneId) {
-                        tasks[taskId].progress = milestoneId;
-                        saveTasks(tasks);
+                    // --- ZAPISYWANIE PROGRESU ---
+                    const currentTask = getTask(taskId);
+                    
+                    if (currentTask.progress < milestoneId) {
+                        currentTask.progress = milestoneId;
+                        
+                        // Opcjonalnie: Jeśli to był ostatni krok, oznacz zadanie jako ukończone
+                        if (currentTask.progress >= currentTask.milestones.length - 1) {
+                            currentTask.done = true; 
+                        }
+
+                        // Zapisujemy tylko ten konkretny element za pomocą setTask
+                        setTask(taskId, currentTask);
+                        
                         console.log(`Progres zaktualizowany! Zadanie ${taskId}, nowy postęp: ${milestoneId}`);
                     }
                     
