@@ -1,4 +1,4 @@
-import { getTasks, saveTasks, addTask, clearTasks } from '../taskUtilities.js';
+import { getTasks, saveTasks, addTask, clearTasks } from './taskUtilities.js';
 
 const taskList = document.getElementById('task-list');
 const taskTypeSelection = document.querySelector('.task-type-selection');

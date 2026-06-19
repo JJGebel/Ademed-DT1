@@ -1,5 +1,5 @@
 // KLUCZOWA POPRAWKA: Przeglądarka wymaga końcówki .js w ścieżce
-import { getTask, setTask } from '../taskUtilities.js';
+import { getTask, setTask } from './taskUtilities.js';
 
 // Pobranie elementów z HTML
 const contentDiv = document.querySelector('.content');
