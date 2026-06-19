@@ -76,16 +76,14 @@ async function handleSmartPhase(userInput) {
 // FAZA 1 - TASKS
 // =============================================================
 function getTasksSystemPrompt() {
-    return `Pomagasz planować małe kroki do celu SMART: "${smartGoal}".
+    return `Pomagasz zaplanować JEDNO, główne zadanie prowadzące do celu SMART: "${smartGoal}".
 Zasady:
-1. Poproś użytkownika o opisanie kolejnego małego kroku/zadania. NIE sugeruj kroków samodzielnie, chyba że użytkownik wprost poprosi.
-2. Sprawdź, czy zadanie zawiera:
-   a) Tytuł
-   b) Termin wykonania
-   c) Dla zadań czasowych (których NIE można sprawdzić papierowym testem, np. gitara, bieganie, czytanie) - także długość wykonywania.
-3. Jeśli brakuje info - dopytuj.
-4. Gdy zadanie jest kompletne - odpowiedz zaczynając DOKŁADNIE od "ZADANIE_OK:" i powtórz tytuł.
-5. Odpowiadaj po polsku. Bądź zwięzly.`;
+1. Rozmawiasz z użytkownikiem wyłącznie o ustaleniu KAMIENI MILOWYCH (małych kroków) dla tego JEDNEGO zadania.
+2. NIE sugeruj tworzenia osobnych, nowych zadań. Wszystko, co podaje użytkownik (np. "nauka teorii", "ćwiczenia"), to kolejne kroki (kamienie milowe) w ramach jednego głównego bloku.
+3. Jeśli użytkownik podaje bardzo ogólny krok, dopytaj o szczegóły.
+4. Gdy ustalicie już logiczną ścieżkę (np. od 3 do 5 kroków), podsumuj je.
+5. Zakończ odpowiedź DOKŁADNIE zwrotem "ZADANIE_OK:" tylko wtedy, gdy cała lista kroków (kamieni milowych) dla tego jednego zadania jest już gotowa.
+6. Odpowiadaj po polsku. Bądź zwięzły i trzymaj się kontekstu.`;
 }
 
 async function startTasksPhase() {
@@ -158,8 +156,11 @@ async function handleTasksPhase(userInput) {
 }
 
 async function extractTaskData(convHistory) {
-    const extractSys = `Wyciągnij dane zadania z rozmowy i zwróć TYLKO JSON (bez markdown):
-{"title":"...","deadline":"...","duration":"...lub null","details":"..."}`;
+    const extractSys = `Przeanalizuj rozmowę i wyciągnij z niej dane do utworzenia JEDNEGO zadania.
+    Zwróć TYLKO JSON (bez formatowania markdown).
+    Użytkownik podawał kroki - zapisz je jako tablicę w "milestones".
+    Schemat wymaganego JSONa:
+    {"title":"Główny temat (np. Nauka ułamków)","deadline":"...","duration":"...lub null","details":"...","milestones":["krok 1", "krok 2", "krok 3"]}`;
     
     const conv = convHistory.map(m => `${m.role === 'user' ? 'U' : 'AI'}: ${m.content}`).join('\n');
     
@@ -196,24 +197,29 @@ async function generateFinalJson() {
 
     CHAT_BOX.innerHTML += '<div class="bubble received"><strong>=== FAZA 3: Generowanie JSON ===</strong></div>';
 
-    const sys = `Generujesz JSON planu działania. Odpowiedz TYLKO JSONem bez markdown.
-Schema:
+    const sys = `Jesteś konwerterem danych do formatu JSON. Twoim zadaniem jest wygenerowanie planu działania na podstawie celu SMART oraz dostarczonych danych zadania.
+    Odpowiedz TYLKO i WYŁĄCZNIE czystym JSONem (bez znaczników \`\`\`json).
+
+RESTRYKCJE KRYTYCZNE:
+1. W tablicy "tasks" MOŻE ZNAJDOWAĆ SIĘ TYLKO JEDEN OBIEKT. Absolutny zakaz tworzenia więcej niż 1 zadania.
+2. Jeśli zadanie to proces z krokami, ustaw "type": "zad" i skopiuj podane "milestones". Zostaw "duration": null.
+3. Jeśli zadanie to nawyk czasowy (np. bieganie), ustaw "type": "rep", przypisz czas do "duration" i ustaw "milestones": null.
+4. Pole "progress" MUSI wynosić zawsze -1.
+
+Schemat:
 {
   "smartGoal": "string",
   "tasks": [
     {
-      "type": "zad lub rep",
+      "type": "zad" lub "rep",
       "title": "string",
       "details": "string",
-      "milestones": ["...", "..."] lub null,
+      "milestones": ["string", "string"] lub null,
       "progress": -1,
-      "duration": "string lub null"
+      "duration": "string" lub null
     }
   ]
-}
-type="rep": powtarzalne czasowe (gitara, bieganie, czytanie) - ma duration, BRAK milestones.
-type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).
-progress zawsze = -1 dla nowych zadań.`;
+}`;
 
     const prompt = `Cel SMART: ${smartGoal}\n\nZadania:\n${JSON.stringify(tasks, null, 2)}\n\nWygeneruj JSON.`;
     
