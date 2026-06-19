@@ -56,6 +56,7 @@ html, body {
 .INPUT {
     flex: 1;
     display: flex;
+    width: 100%;
 }
 
 .INPUT textarea {
@@ -108,4 +109,86 @@ html, body {
     color: #0D1117;
     box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
     transform: translateY(-2px); 
+}
+
+
+/* Nakładka przyciemniająca tło */
+.modal-overlay {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Zapewnia, że alert będzie zawsze na samym wierzchu */
+}
+
+/* Klasa do ukrywania modalu */
+.modal-overlay.hidden {
+    display: none;
+}
+
+/* Główne okienko modalu */
+.modal-box {
+    background: #1F2937;
+    border: 2px solid #00E5FF;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    color: #E6EDF3;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+    animation: popIn 0.3s ease-out;
+}
+
+.modal-box h3 {
+    color: #00E5FF;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.modal-box p {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+/* Przycisk OK */
+.modal-btn {
+    background: transparent;
+    border: 2px solid #00E5FF;
+    color: #00E5FF;
+    padding: 10px 40px;
+    border-radius: 30px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-btn:hover {
+    background: #00E5FF;
+    color: #0D1117;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Animacja płynnego pojawiania się */
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

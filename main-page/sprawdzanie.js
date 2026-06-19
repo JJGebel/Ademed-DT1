@@ -102,8 +102,12 @@ if (inputArea && submitBtn && currentMilestoneText !== "") {
                     }
                     
                     setTimeout(() => {
-                        alert("Gratulacje, krok zaliczony i progres zapisany!");
+                        showCustomAlert("Gratulacje, krok zaliczony i progres zapisany!");
                     }, 800);
+
+                    setTimeout(() => {
+                        window.location.href = 'index.php';
+                    }, 5000);
 
                 } else {
                     submitBtn.textContent = "Spróbuj ponownie";
@@ -111,7 +115,7 @@ if (inputArea && submitBtn && currentMilestoneText !== "") {
                     inputArea.disabled = false;
                     
                     const reason = aiResponseText.replace("ODRZUCONE:", "").trim();
-                    alert("Wskazówka od Mentora:\n\n" + reason);
+                    showCustomAlert("Wskazówka od Mentora:\n\n" + reason);
                 }
 
             } catch (error) {
@@ -119,12 +123,30 @@ if (inputArea && submitBtn && currentMilestoneText !== "") {
                 submitBtn.textContent = "Zatwierdź";
                 submitBtn.disabled = false;
                 inputArea.disabled = false;
-                alert("Nie udało się połączyć z serwerem. Sprawdź konsolę.");
+                showCustomAlert("Nie udało się połączyć z serwerem. Sprawdź konsolę.");
             }
             
         } else {
-            alert("Pole nie może być puste. Napisz, czego udało Ci się dowiedzieć lub nauczyć!");
+            showCustomAlert("Pole nie może być puste. Napisz, czego udało Ci się dowiedzieć lub nauczyć!");
             inputArea.focus();
         }
     });
 }
+
+
+window.showCustomAlert = function(message) {
+    const alertBox = document.getElementById('custom-alert');
+    const messageBox = document.getElementById('custom-alert-message');
+    
+    if (alertBox && messageBox) {
+        messageBox.innerText = message;
+        alertBox.classList.remove('hidden');
+    }
+};
+
+window.closeCustomAlert = function() {
+    const alertBox = document.getElementById('custom-alert');
+    if (alertBox) {
+        alertBox.classList.add('hidden');
+    }
+};
