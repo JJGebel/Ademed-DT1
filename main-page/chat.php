@@ -21,7 +21,7 @@
         </div>
 
         <div class="button-proceed">
-            <button class="end-chat-btn" onclick="sendToAi()">Koniec rozmowy</button>
+            <button class="end-chat-btn" onclick="document.getElementById('prompt').value='/end'; sendToAi();">Zakończ rozmowę</button>
         </div>
     </div>
 </body>

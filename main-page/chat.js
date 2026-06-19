@@ -225,11 +225,20 @@ type="zad": zadanie z efektem - ma milestones (3-5), BRAK duration (null).`;
         CHAT_BOX.innerHTML += '<div class="bubble received"><strong>Plan gotowy!</strong></div>';
         CHAT_BOX.innerHTML += '<div class="bubble received" style="font-family: monospace; white-space: pre-wrap; background: #1A1F29;">' + JSON.stringify(finalPlan, null, 2) + '</div>';
         
-        // Download as JSON file
-        downloadJson(finalPlan);
+        // Zapisz do localStorage
+        localStorage.setItem('smartGoal', finalPlan.smartGoal);
+        localStorage.setItem('tasks', JSON.stringify(finalPlan.tasks));
         
-        PROMPT_INPUT.placeholder = 'Plan zakończony! Odśwież stronę, aby zacząć od nowa.';
+        console.log(`Załadowano cel: ${finalPlan.smartGoal}`);
+        console.log(`Zapisano ${finalPlan.tasks.length} zadań do localStorage.`);
+        
+        PROMPT_INPUT.placeholder = 'Plan zakończony! Przekierowanie...';
         PROMPT_INPUT.disabled = true;
+        
+        // Przekieruj do tasks.php po krótkim opóźnieniu
+        setTimeout(() => {
+            window.location.href = 'tasks.php';
+        }, 2000);
         
     } catch (e) {
         CHAT_BOX.innerHTML += '<div class="bubble received" style="background: #f8d7da; color: #721c24;">Błąd generowania JSON: ' + e.message + '</div>';
