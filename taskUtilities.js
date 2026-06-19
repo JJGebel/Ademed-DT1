@@ -64,6 +64,16 @@ export function deleteTask(index) {
     saveTasks(tasks);
 }
 
+export function getTask(index) {
+	const tasks = getTasks();
+	return tasks[index];
+}
+export function setTask(index, newtask) {
+	const tasks = getTasks();
+	tasks[index] = newtask;
+	saveTasks(tasks);
+}
+
 export function addTask(type, title, details, milestones) {
     if (type === null)  return;
 
