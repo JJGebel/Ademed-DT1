@@ -25,8 +25,13 @@ function renderTask(task, idx) {
 			<div class="milestones">
 				<h3><i>Kamienie milowe:</i></h3>
 				<ul style="list-style: none;">`;
-					for (let i = 0; i < task.milestones.length; i++) {
-						const milestone = task.milestones[i];
+
+					const milestones = task.milestones || []; 
+
+					for (let i = 0; i < milestones.length; i++) {
+    				// Pamiętaj, żeby niżej w pętli też używać 'milestones[i]', a nie 'task.milestones[i]'!
+    				const milestone = milestones[i];
+
 						const isCompleted = (i <= task.progress);
 
 						if (isCompleted) {
@@ -75,11 +80,21 @@ repButton.addEventListener('click', () => {
 
 renderTasks();
 
-const ongoingButton = document.querySelectorAll('.ongoing-button');
-ongoingButton.forEach(button => {
-	button.addEventListener('click', () => {
-		const taskid = button.dataset.taskid;
-		const milestoneId = getTasks()[taskid].progress + 1; // id kamienia milowego, który jest aktualnie sprawdzany
-		window.location.href = 'sprawdzanie.php?task_id=' + taskid + '&milestone_id=' + milestoneId;
-	});
+// Nasłuchujemy kliknięć na całym kontenerze z zadaniami
+taskList.addEventListener('click', (event) => {
+    // .closest() upewnia się, że nawet jak klikniesz w sam tekst na przycisku, to zadziała
+    const button = event.target.closest('.ongoing-button');
+    
+    if (button) {
+        const taskid = button.dataset.taskid;
+        const tasks = getTasks();
+        
+        // Zabezpieczenie przed błędem, gdyby zadania nie było w pamięci
+        if (tasks && tasks[taskid]) {
+            const currentProgress = tasks[taskid].progress || 0; 
+            const milestoneId = currentProgress + 1; 
+            
+            window.location.href = `sprawdzanie.php?task_id=${taskid}&milestone_id=${milestoneId}`;
+        }
+    }
 });
