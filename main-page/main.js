@@ -27,18 +27,17 @@ function renderTask(task, idx) {
 				<ul style="list-style: none;">`;
 					for (let i = 0; i < task.milestones.length; i++) {
 						const milestone = task.milestones[i];
-						const isCompleted = i <= task.progress;
+						const isCompleted = (i <= task.progress);
 
 						if (isCompleted) {
 							innerHTML += `<li class="completed-milestone"><p><span style="font-style: normal;">◼</span> ${milestone} </p></li>`;
 						} else {
 							if (i === task.progress + 1) {
-								innerHTML += `<li class="ongoing-milestone"><div style="display: flex; align-items: center; gap: 10px;"><p>➜ ${milestone} (bieżący)</p><button class="ongoing-button">Sprawdź się</button></div></li>`;
+								innerHTML += `<li class="ongoing-milestone"><div style="display: flex; align-items: center; gap: 10px;"><p>➜ ${milestone} (bieżący)</p><button class="ongoing-button" data-taskid="${idx}">Sprawdź się</button></div></li>`;
 							} else {
 								innerHTML += `<li class="upcoming-milestone"><p><span style="font-style: normal;">◻</span> ${milestone}</p></li>`;
 							}
 						}
-						
 					}
 	innerHTML += `
 				</ul>
@@ -77,9 +76,11 @@ repButton.addEventListener('click', () => {
 clearTasks();
 renderTasks();
 
-const ongoingButton = document.querySelector('.ongoing-button');
-ongoingButton.addEventListener('click', () => {
-	const taskid = 0; // TODO: pobrać id taska
-	const milestoneId = getTasks()[taskid].progress;
-	window.location.href = 'sprawdzanie.php?task_id=' + taskid + '&milestone_id=' + milestoneId;
+const ongoingButton = document.querySelectorAll('.ongoing-button');
+ongoingButton.forEach(button => {
+	button.addEventListener('click', () => {
+		const taskid = button.dataset.taskid;
+		const milestoneId = getTasks()[taskid].progress + 1; // id kamienia milowego, który jest aktualnie sprawdzany
+		window.location.href = 'sprawdzanie.php?task_id=' + taskid + '&milestone_id=' + milestoneId;
+	});
 });

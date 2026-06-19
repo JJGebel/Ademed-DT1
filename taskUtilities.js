@@ -30,7 +30,7 @@ const defaultTasks = [
   		  "Milestone 6 . ..",
   		  "Milestone 7 . ..",
   		], // kamienie milowe ustalone przez LLMa, które użytkownik musi osiągnąć, aby zaliczyć zadanie (na razie tylko dla 'zad')
-        progress: 6, // postęp w zadaniu (index kamienia milowego, który został osiągnięty)
+        progress: 4, // postęp w zadaniu (index kamienia milowego, który został osiągnięty)
 	}
 ];
 
